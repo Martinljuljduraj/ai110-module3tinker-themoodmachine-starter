@@ -50,6 +50,15 @@ SAMPLE_POSTS = [
     "This is fine",
     "So excited for the weekend",
     "I am not happy about this",
+    "Lowkey stressed but kind of proud of myself", 
+    "Highkey feeling great today 😊",
+    "No cap, I can't wait for this to be over 😩",
+    "Doing nothing is the best way to spend a day",
+    "I have no strong feelings one way or the other 😐",
+    "I'm not sure how I feel about this 😕",
+    "I don't choose sides on this one, it's just a day",
+    "This is the best day ever 🙌",
+    "I can't tell if I'm more excited or more stressed about this 😬",
 ]
 
 # Human labels for each post above.
@@ -65,6 +74,15 @@ TRUE_LABELS = [
     "neutral",   # "This is fine"
     "positive",  # "So excited for the weekend"
     "negative",  # "I am not happy about this"
+    "mixed",     # "Lowkey stressed but kind of proud of myself"
+    "positive",  # "Highkey feeling great today 😊"
+    "negative",  # "No cap, I can't wait for this to be over 😭"
+    "neutral",   # "Doing nothing is the best way to spend a day"
+    "mixed",     # "I have no strong feelings one way or the other 😐"
+    "negative",  # "I'm not sure how I feel about this 💀"
+    "neutral",   # "I don't choose sides on this one, it's just a day"
+    "positive",  # "This is the best day ever 🙌"
+    "mixed",     # "I can't tell if I'm more excited or more stressed about this 😬"
 ]
 
 # TODO: Add 5-10 more posts and labels.

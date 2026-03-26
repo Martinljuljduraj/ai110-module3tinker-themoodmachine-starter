@@ -9,6 +9,7 @@ This class starts with very simple logic:
   - Convert that score into a mood label
 """
 
+import re
 from typing import List, Dict, Tuple, Optional
 
 from dataset import POSITIVE_WORDS, NEGATIVE_WORDS
@@ -52,9 +53,24 @@ class MoodAnalyzer:
           - Handle simple emojis separately (":)", ":-(", "🥲", "😂")
           - Normalize repeated characters ("soooo" -> "soo")
         """
-        cleaned = text.strip().lower()
-        tokens = cleaned.split()
+        # Map text-based and unicode emojis to mood tokens before lowercasing.
+        emoji_map = {
+            ":)": "happy", ":-)": "happy", "😊": "happy", "😂": "happy",
+            ":(": "sad", ":-(": "sad", "😢": "sad", "😭": "sad", "🥲": "sad",
+            "💀": "dead", "😡": "angry",
+        }
+        for symbol, word in emoji_map.items():
+            text = text.replace(symbol, f" {word} ")
 
+        cleaned = text.strip().lower()
+
+        # Normalize repeated characters: "soooo" -> "soo", "noooo" -> "noo".
+        cleaned = re.sub(r"(.)\1{2,}", r"\1\1", cleaned)
+
+        # Remove punctuation (but keep spaces so splitting still works).
+        cleaned = re.sub(r"[^\w\s]", "", cleaned)
+
+        tokens = cleaned.split()
         return tokens
 
     # ---------------------------------------------------------------------
@@ -75,15 +91,24 @@ class MoodAnalyzer:
           - Give some words higher weights than others (for example "hate" < "annoyed")
           - Treat emojis or slang (":)", "lol", "💀") as strong signals
         """
-        # TODO: Implement this method.
-        #   1. Call self.preprocess(text) to get tokens.
-        #   2. Loop over the tokens.
-        #   3. Increase the score for positive words, decrease for negative words.
-        #   4. Return the total score.
-        #
-        # Hint: if you implement negation, you may want to look at pairs of tokens,
-        # like ("not", "happy") or ("never", "fun").
-        pass
+        # Slang/emoji tokens that carry a strong positive or negative signal.
+        strong_positive = {"lol", "happy", "lit", "goat", "fire", "blessed"}
+        strong_negative = {"dead", "sad", "angry", "trash", "rip"}
+
+        tokens = self.preprocess(text)
+        score = 0
+
+        for token in tokens:
+            if token in strong_positive:
+                score += 2
+            elif token in strong_negative:
+                score -= 2
+            elif token in self.positive_words:
+                score += 1
+            elif token in self.negative_words:
+                score -= 1
+
+        return score
 
     # ---------------------------------------------------------------------
     # Label prediction
@@ -105,12 +130,15 @@ class MoodAnalyzer:
         Just remember that whatever labels you return should match the labels
         you use in TRUE_LABELS in dataset.py if you care about accuracy.
         """
-        # TODO: Implement this method.
-        #   1. Call self.score_text(text) to get the numeric score.
-        #   2. Return "positive" if the score is above 0.
-        #   3. Return "negative" if the score is below 0.
-        #   4. Return "neutral" otherwise.
-        pass
+        score = self.score_text(text)
+
+        if score >= 2:
+            return "positive"
+        if score <= -2:
+            return "negative"
+        if score == 1 or score == -1:
+            return "mixed"
+        return "neutral"
 
     # ---------------------------------------------------------------------
     # Explanations (optional but recommended)
@@ -132,6 +160,9 @@ class MoodAnalyzer:
         The current implementation is a placeholder so the code runs even
         before you implement it.
         """
+        strong_positive = {"lol", "happy", "lit", "goat", "fire", "blessed"}
+        strong_negative = {"dead", "sad", "angry", "trash", "rip"}
+
         tokens = self.preprocess(text)
 
         positive_hits: List[str] = []
@@ -139,15 +170,22 @@ class MoodAnalyzer:
         score = 0
 
         for token in tokens:
-            if token in self.positive_words:
-                positive_hits.append(token)
+            if token in strong_positive:
+                positive_hits.append(f"{token}(+2)")
+                score += 2
+            elif token in strong_negative:
+                negative_hits.append(f"{token}(-2)")
+                score -= 2
+            elif token in self.positive_words:
+                positive_hits.append(f"{token}(+1)")
                 score += 1
-            if token in self.negative_words:
-                negative_hits.append(token)
+            elif token in self.negative_words:
+                negative_hits.append(f"{token}(-1)")
                 score -= 1
 
         return (
-            f"Score = {score} "
-            f"(positive: {positive_hits or '[]'}, "
-            f"negative: {negative_hits or '[]'})"
+            f"tokens={tokens} | "
+            f"score={score} | "
+            f"positive={positive_hits or []} | "
+            f"negative={negative_hits or []}"
         )
